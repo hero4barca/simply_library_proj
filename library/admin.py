@@ -14,7 +14,7 @@ class BookAdmin(admin.ModelAdmin):
 
     def get_authors(self, obj):
         authors = ""
-        for author in obj.author:
+        for author in obj.author.all():
             authors + str(author) + "; "
         return authors
     get_authors.short_description = "author(s)"

@@ -13,7 +13,7 @@ class Author(models.Model):
 class Book(models.Model):
     title = models.CharField(max_length=50)
     published_on = models.DateTimeField(auto_now_add=True)
-    author = models.ManyToManyField(Author)
+    authors = models.ManyToManyField(Author)
 
     class Meta:
         ordering = ["title"]
