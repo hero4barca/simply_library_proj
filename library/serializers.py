@@ -4,7 +4,7 @@ from .models import Book, Author
 
 
 # Serializers define the API representation.
-class UserRegistrationSerializer():
+class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
