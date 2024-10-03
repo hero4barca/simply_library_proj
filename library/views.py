@@ -9,9 +9,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework_simplejwt.authentication import JWTAuthentication
+
 
 from .models import Book, Author
 from .serializers import UserSerializer, BookSerializer, AuthorSerializer, UserRegistrationSerializer
+from .permissions import IsAuthenticatedForWriteActions
+from .authentication import JWTAuthenticationForWriteActions
 
 # Create your views here.
 # ViewSets define the view behavior.
@@ -23,7 +27,7 @@ class RegisterView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+            return Response({'detail': 'User registered successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(TokenObtainPairView):
@@ -36,7 +40,13 @@ class UserViewSet(viewsets.ModelViewSet):
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+    authentication_classes = [JWTAuthenticationForWriteActions]
+    permission_classes = [IsAuthenticatedForWriteActions]
 
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+    authentication_classes = [JWTAuthenticationForWriteActions]
+    permission_classes = [IsAuthenticatedForWriteActions]
