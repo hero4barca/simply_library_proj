@@ -13,8 +13,9 @@ class BookAdmin(admin.ModelAdmin):
     list_display = ["title", "published_on", "get_authors" ]
 
     def get_authors(self, obj):
-        authors = ""
-        for author in obj.author.all():
-            authors + str(author) + "; "
-        return authors
+        authors_string = ""
+        for author in obj.authors.all():
+            authors_string += str(author) + "; "
+        return authors_string
+
     get_authors.short_description = "author(s)"
