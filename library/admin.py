@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Author, Book
+from .models import Author, Book, Favorite
 
 
 # Register your models here.
@@ -19,3 +19,7 @@ class BookAdmin(admin.ModelAdmin):
         return authors_string
 
     get_authors.short_description = "author(s)"
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ["user.username", "book.title"]
