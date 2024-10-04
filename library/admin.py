@@ -10,7 +10,7 @@ class AuthorAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ["title", "published_on", "get_authors" ]
+    list_display = ["title", "get_authors" ]
 
     def get_authors(self, obj):
         authors_string = ""
