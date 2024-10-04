@@ -139,6 +139,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+
+    # add filter backends for search functionality
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',  # Add this if it's not already added
     ]
 }
 
