@@ -3,12 +3,13 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import UserViewSet, BookViewSet, AuthorViewSet, RegisterView, LoginView
+from .views import UserViewSet, BookViewSet, AuthorViewSet, RegisterView, LoginView, FavoriteViewSet
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
-router.register(r'book_authors', AuthorViewSet)
+router.register(r'book-authors', AuthorViewSet)
 router.register(r'books', BookViewSet)
+router.register(r'favourite-books', FavoriteViewSet, basename='favourites')
 
 urlpatterns = [
     path('api/register', RegisterView.as_view(), name='register'),

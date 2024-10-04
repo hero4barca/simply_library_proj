@@ -22,4 +22,4 @@ class BookAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ["user.username", "book.title"]
+    list_display = ["user__username", "book__title"]
