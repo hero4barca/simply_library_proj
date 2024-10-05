@@ -143,7 +143,7 @@ def calculate_similarity(book_df, favorite_ids):
 
         # Series similarity: 0.5 if same series_id
         if pd.notna(fav_series_id) and fav_series_id.strip() != "":
-            same_series = (book_df["series_id"] == fav_series_id).astype(float) * 0.5
+            same_series = (book_df["series_id"] == fav_series_id).astype(float) * 0.3
             similarity_scores[fav_id] += same_series
 
         # Author similarity: 0.3 if any common authors
