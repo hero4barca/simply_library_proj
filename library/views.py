@@ -102,7 +102,7 @@ class FavoriteViewSet(viewsets.ViewSet):
         """
         Delete view function.
 
-        @param pk of the Book object NOT Favourite model
+        @param pk: pk of the Book object; NOT Favourite model
 
         """
         try:
