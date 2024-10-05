@@ -7,9 +7,9 @@ from .views import UserViewSet, BookViewSet, AuthorViewSet, RegisterView, LoginV
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
-router.register(r'book-authors', AuthorViewSet)
+router.register(r'authors', AuthorViewSet)
 router.register(r'books', BookViewSet)
-router.register(r'favorite', FavoriteViewSet, basename='favorite')
+router.register(r'favorites', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     path('api/register', RegisterView.as_view(), name='register'),

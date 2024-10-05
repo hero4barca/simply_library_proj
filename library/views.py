@@ -63,16 +63,22 @@ class AuthorViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    # http_method_names = ["get", "post", "delete"]
+    http_method_names = ["get", "post", "delete"]
 
 
     def list(self, request):
         # Get all favorite books for the user
         favorites = Favorite.objects.filter(user=request.user)
-        serializer = BookSerializer([fav.book for fav in favorites], many=True)
+        serializer = BookSerializer([fav.book for fav in favorites], many=True) # use book serializer
         return Response(serializer.data)
 
     def create(self, request):
+        """
+        Handles 'create' action
+        Checks that the book does exist before creating relation between user and book
+
+        @Param book_id in request body
+        """
         book_id = request.data.get('book_id')
         try:
             book = Book.objects.get(id=book_id)
@@ -92,10 +98,15 @@ class FavoriteViewSet(viewsets.ViewSet):
             })
         return Response({'message': 'Book already in favorites'}, status=status.HTTP_200_OK)
 
-    # @action(detail=False, methods=['DELETE'], url_path='delete')
     def destroy(self, request, pk=None):
+        """
+        Delete view function.
+
+        @param pk of the Book object NOT Favourite model
+
+        """
         try:
-            favorite = Favorite.objects.get(user=request.user, book_id=pk)
+            favorite = Favorite.objects.get(user=request.user, book_id=pk) # query by book_id not object pk
             favorite.delete()
             return Response({'message': 'Book removed from favorites'}, status=status.HTTP_200_OK)
         except Favorite.DoesNotExist:

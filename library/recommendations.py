@@ -11,6 +11,9 @@ memory = Memory('./cachedir', verbose=0)
 def recommend_books(user, top_n=5):
     """
     Implements books recommendations based on the favorite books for the current user.
+    @Param  user: the authenticated user object
+    @Param top_n: the number of recommendation required
+    @Return : List of recommended books with length 'top_n'; default 5
     """
     # Get the list of favorite book IDs for the user
     favorite_books = Favorite.objects.filter(user=user).values_list('book_id', flat=True)
@@ -44,6 +47,7 @@ def recommend_books(user, top_n=5):
 def get_books_df():
     """
     Build a dataframe of all books in the database.
+    @Returns dataframe of all books in the DB
     """
     # Use 'prefetch_related' to efficiently load the related authors in a single query.
     books = Book.objects.prefetch_related('authors').all()
