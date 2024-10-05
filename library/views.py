@@ -16,6 +16,7 @@ from .models import Book, Author, Favorite
 from .serializers import UserSerializer, BookSerializer, AuthorSerializer, UserRegistrationSerializer
 from .permissions import IsAuthenticatedForWriteActions
 from .authentication import JWTAuthenticationForWriteActions
+from .recommendations import recommend_books
 
 # Create your views here.
 # ViewSets define the view behavior.
@@ -62,6 +63,8 @@ class AuthorViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    # http_method_names = ["get", "post", "delete"]
+
 
     def list(self, request):
         # Get all favorite books for the user
@@ -82,13 +85,14 @@ class FavoriteViewSet(viewsets.ViewSet):
         favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
         if created:
             # Return recommendations when a new favorite is added
-            # recommendations = recommend_books(request.user)
+            recommendations = recommend_books(request.user)
             return Response({
                 'message': 'Book added to favorites',
-                'recommendations': "here are you book recommendations"
+                'recommendations': recommendations
             })
         return Response({'message': 'Book already in favorites'}, status=status.HTTP_200_OK)
 
+    # @action(detail=False, methods=['DELETE'], url_path='delete')
     def destroy(self, request, pk=None):
         try:
             favorite = Favorite.objects.get(user=request.user, book_id=pk)

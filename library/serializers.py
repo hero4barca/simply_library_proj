@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Book, Author
+from .models import Book, Author, Favorite
 
 
 # Serializers define the API representation.

@@ -9,7 +9,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
 router.register(r'book-authors', AuthorViewSet)
 router.register(r'books', BookViewSet)
-router.register(r'favourite-books', FavoriteViewSet, basename='favourites')
+router.register(r'favorite', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     path('api/register', RegisterView.as_view(), name='register'),
