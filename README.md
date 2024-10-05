@@ -40,3 +40,5 @@ Setup and run (localhost):
 5. Load cleaned subset of data from in csv file 'cleaned_data.csv' to db: "python manage.py load_data cleaned_books.csv".
 Data is subset of https://www.kaggle.com/datasets/opalskies/large-books-metadata-dataset-50-mill-entries?resource=download
 6. Start server: python manage.py runserver
+
+Register and login to access protected endpoints or access public endpoints.
