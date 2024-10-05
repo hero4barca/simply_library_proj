@@ -2,6 +2,11 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from library.models import Book, Favorite
+from joblib import Memory
+
+# Create a memory object for caching
+memory = Memory('./cachedir', verbose=0)
+
 
 def recommend_books(user, top_n=5):
     """
@@ -35,7 +40,7 @@ def recommend_books(user, top_n=5):
 
     return recommended_books_list
 
-
+@memory.cache
 def get_books_df():
     """
     Build a dataframe of all books in the database.
@@ -70,6 +75,28 @@ def get_books_df():
     return book_df
 
 
+@memory.cache
+def compute_tfidf_matrices(book_df):
+    """
+    Computes and caches the TF-IDF matrices for descriptions and titles.
+
+    Args:
+        book_df (pd.DataFrame): DataFrame containing book descriptions and titles.
+
+    Returns:
+        Tuple of TF-IDF matrices for descriptions and titles.
+    """
+    # Initialize TF-IDF Vectorizer
+    tfidf_vectorizer_desc = TfidfVectorizer(stop_words="english")
+    tfidf_vectorizer_title = TfidfVectorizer(stop_words="english")
+
+    # Fit and transform descriptions and titles
+    desc_matrix = tfidf_vectorizer_desc.fit_transform(book_df["description"])
+    title_matrix = tfidf_vectorizer_title.fit_transform(book_df["title"])
+
+    return desc_matrix, title_matrix
+
+
 def calculate_similarity(book_df, favorite_ids):
     """
     Calculate the similarity between all books and favorite books using precomputed values for efficiency.
@@ -85,13 +112,8 @@ def calculate_similarity(book_df, favorite_ids):
     book_df["description"] = book_df["description"].fillna("")
     book_df["title"] = book_df["title"].fillna("")
 
-    # Initialize TF-IDF Vectorizer
-    tfidf_vectorizer_desc = TfidfVectorizer(stop_words="english")
-    tfidf_vectorizer_title = TfidfVectorizer(stop_words="english")
-
     # Fit and transform descriptions and titles
-    desc_matrix = tfidf_vectorizer_desc.fit_transform(book_df["description"])
-    title_matrix = tfidf_vectorizer_title.fit_transform(book_df["title"])
+    desc_matrix, title_matrix = compute_tfidf_matrices(book_df)
 
     # Initialize similarity_scores DataFrame with float dtype
     similarity_scores = pd.DataFrame(0.0, index=book_df.index, columns=favorite_ids, dtype='float64')

@@ -136,6 +136,9 @@ npm-debug.log*
 .DS_Store
 /storybook-static
 
+# joblib cache dir
+cachedir/
+
 
 # ******** fpr vueapp ********************
 vueapp/node_modules/
