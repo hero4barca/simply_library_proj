@@ -1,4 +1,4 @@
-A simple library API project with django-rest-framework.
+A sample library API project with django-rest-framework.
 
 REQUIREMENTS/FEATURES:
 ```
