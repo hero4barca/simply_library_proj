@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.auth.models import User
 
-from library.models import Book, Author
+from library.models import Book, Author, Favorite
 
 @pytest.mark.django_db
 class TestBookModel:
@@ -73,3 +73,11 @@ class TestFavoriteModel:
         author = Author.objects.create(name="Test Author")
         book = Book.objects.create(title="Test Book")
         book.authors.add(author)
+
+        # Create a favorite
+        favorite = Favorite.objects.create(user=user, book=book)
+
+        # Assertions
+        assert favorite.user == user
+        assert favorite.book == book
+        assert str(favorite) == "testuser - Test Book"
