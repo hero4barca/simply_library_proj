@@ -117,3 +117,17 @@ class TestLoginView():
         assert response.status_code == 200
         assert "access" in response.data
         assert "refresh" in response.data
+
+
+    def test_login_invalid_password(self, create_user):
+        """
+        Test logging in with an invalid password.
+        """
+        data = {
+            "username": "testuser",
+            "password": "WrongPassword!",
+        }
+        response = self.client.post("/api/login", data=data)
+        assert response.status_code == 401
+        assert "access" not in response.data
+        assert "refresh" not in response.data
