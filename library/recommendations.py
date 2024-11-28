@@ -32,7 +32,7 @@ def recommend_books(user, top_n=5):
     # book_df = book_df[~book_df['id'].isin(favorite_ids)].reset_index(drop=True)
 
     # Calculate similarity scores with favorite books
-    similarity_scores = calculate_similarity_2(book_df, favorite_ids)
+    similarity_scores = calculate_similarity(book_df, favorite_ids)
 
     # Sum similarity scores across all favorite books and sort to select the top N recommendations
     top_recommendations = similarity_scores.sum(axis=1).sort_values(ascending=False).head(top_n)
@@ -207,7 +207,7 @@ def compute_similarity_for_fav_book(args):
 
 
 # uses concurrent processes
-def calculate_similarity_2(book_df, favorite_ids):
+def calculate_similarity_concurrent(book_df, favorite_ids):
     """
     Calculate similarity scores between all books and favorite books using multiprocessing.
     """
