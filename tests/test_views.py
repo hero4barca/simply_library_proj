@@ -89,3 +89,31 @@ class TestRegisterView():
         # Assertions
         assert response.status_code == 400  # HTTP_400_BAD_REQUEST
         assert "email" in response.data  # Duplicate email error
+
+
+@pytest.fixture
+def create_user(db):
+    """
+    Fixture to create a test user for login tests.
+    """
+    return User.objects.create_user(username="testuser", email="testuser@example.com", password="StrongPassword123!")
+
+@pytest.mark.django_db
+class TestLoginView():
+
+    def setup_method(self):
+        self.client = APIClient()
+        self.login_url = '/api/login'
+
+    def test_login_valid_credentials(self, create_user):
+        """
+        Test logging in with valid credentials.
+        """
+        data = {
+            "username": "testuser",
+            "password": "StrongPassword123!",
+        }
+        response = self.client.post(self.login_url, data=data)
+        assert response.status_code == 200
+        assert "access" in response.data
+        assert "refresh" in response.data
