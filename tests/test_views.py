@@ -127,7 +127,64 @@ class TestLoginView():
             "username": "testuser",
             "password": "WrongPassword!",
         }
-        response = self.client.post("/api/login", data=data)
+        response = self.client.post(self.login_url, data=data)
         assert response.status_code == 401
         assert "access" not in response.data
         assert "refresh" not in response.data
+        assert response.data["detail"] == "No active account found with the given credentials"
+
+
+    def test_login_invalid_username(self, create_user):
+        """
+        Test logging in with an invalid username.
+        """
+        data = {
+            "username": "invaliduser",
+            "password": "StrongPassword123!",
+        }
+        response = self.client.post(self.login_url , data=data)
+        assert response.status_code == 401
+        assert "access" not in response.data
+        assert "refresh" not in response.data
+        assert response.data["detail"] == "No active account found with the given credentials"
+
+    def test_login_missing_password(self , create_user):
+        """
+        Test logging in with a missing password field.
+        """
+        data = {
+            "username": "testuser",
+        }
+        response = self.client.post(self.login_url, data=data)
+        assert response.status_code == 400
+        assert "access" not in response.data
+        assert "refresh" not in response.data
+        assert "password" in response.data
+
+    def test_login_missing_username(self, create_user):
+        """
+        Test logging in with a missing username field.
+        """
+        data = {
+            "password": "StrongPassword123!",
+        }
+        response = self.client.post(self.login_url, data=data)
+        assert response.status_code == 400
+        assert "access" not in response.data
+        assert "refresh" not in response.data
+        assert "username" in response.data
+
+    def test_login_inactive_user(self):
+        """
+        Test logging in with an inactive user.
+        """
+        inactive_user = User.objects.create_user(username="inactiveuser", password="StrongPassword123!", is_active=False)
+        data = {
+            "username": "inactiveuser",
+            "password": "StrongPassword123!",
+        }
+        response = self.client.post(self.login_url, data=data)
+        assert response.status_code == 401
+        assert "access" not in response.data
+        assert "refresh" not in response.data
+        assert response.data["detail"] == "No active account found with the given credentials"
