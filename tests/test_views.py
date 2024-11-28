@@ -61,3 +61,31 @@ class TestRegisterView():
         # Assertions
         assert response.status_code == 400  # HTTP_400_BAD_REQUEST
         assert "password" in response.data  # Password validation error
+
+    def test_register_user_duplicate_username(self):
+        # Test registration with a duplicate username
+        User.objects.create_user(username="testuser", email="testuser@example.com", password="StrongPassword123!")
+        payload = {
+            "username": "testuser",
+            "email": "newemail@example.com",
+            "password": "AnotherStrongPassword123!"
+        }
+        response = self.client.post(self.register_url, data=payload)
+
+        # Assertions
+        assert response.status_code == 400  # HTTP_400_BAD_REQUEST
+        assert "username" in response.data  # Duplicate username error
+
+    def test_register_user_duplicate_email(self):
+        # Test registration with a duplicate email
+        User.objects.create_user(username="existinguser", email="testuser@example.com", password="StrongPassword123!")
+        payload = {
+            "username": "newuser",
+            "email": "testuser@example.com",
+            "password": "AnotherStrongPassword123!"
+        }
+        response = self.client.post(self.register_url, data=payload)
+
+        # Assertions
+        assert response.status_code == 400  # HTTP_400_BAD_REQUEST
+        assert "email" in response.data  # Duplicate email error

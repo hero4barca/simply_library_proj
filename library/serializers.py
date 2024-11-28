@@ -20,12 +20,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
-
     def validate_password(self, value):
         """
         Validate the password using Django's password validators.
         """
         validate_password(value)
+        return value
+
+    def validate_email(self, value):
+        """
+        Validate that the email is unique.
+        """
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
         return value
 
 
