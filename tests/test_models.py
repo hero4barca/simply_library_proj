@@ -27,3 +27,7 @@ class TestBookModel:
             num_pages=300
         )
         book.authors.add(author1, author2)
+
+        assert book.authors.count() == 2
+        assert author1 in book.authors.all()
+        assert author2 in book.authors.all()
