@@ -31,9 +31,7 @@ class Book(models.Model):
         return f'{self.title}; {self.get_authors_str()}'
 
     def get_authors_str(self):
-        authors_str = ""
-        for author in self.authors.all():
-            authors_str += author.name
+        authors_str = ", ".join(f'{author}' for author in self.authors.all())
         return authors_str
 
 
