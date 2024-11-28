@@ -47,3 +47,17 @@ class TestRegisterView():
         # Assertions
         assert response.status_code == 400  # HTTP_400_BAD_REQUEST
         assert "email" in response.data  # Email validation error
+
+
+    def test_register_user_short_password(self):
+        # Test registration with a password that is too short
+        payload = {
+            "username": "testuser",
+            "email": "testuser@example.com",
+            "password": "123"
+        }
+        response = self.client.post(self.register_url, data=payload)
+
+        # Assertions
+        assert response.status_code == 400  # HTTP_400_BAD_REQUEST
+        assert "password" in response.data  # Password validation error

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Book, Author, Favorite
+from django.contrib.auth.password_validation import validate_password
 
 
 # Serializers define the API representation.
@@ -18,6 +19,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+
+    def validate_password(self, value):
+        """
+        Validate the password using Django's password validators.
+        """
+        validate_password(value)
+        return value
+
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
