@@ -1,6 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
+from library.models import Book, Author, Favorite
 
 @pytest.mark.django_db
 class TestRegisterView():
@@ -188,3 +189,125 @@ class TestLoginView():
         assert "access" not in response.data
         assert "refresh" not in response.data
         assert response.data["detail"] == "No active account found with the given credentials"
+
+@pytest.fixture
+def create_superuser(db):
+    """
+    Fixture to create a superuser for authenticated requests.
+    """
+    return User.objects.create_superuser(username="admin", email="admin@example.com", password="AdminPassword123!")
+
+@pytest.fixture
+def create_normal_user(db):
+    """
+    Fixture to create a normal user for authenticated requests.
+    """
+    return User.objects.create_user(username="testuser", email="testuser@example.com", password="UserPassword123!")
+
+@pytest.mark.django_db
+class TestUserViewSet:
+    def setup_method(self):
+        self.client = APIClient()
+
+
+    def test_list_users_as_admin(self, create_superuser):
+        """
+        Test listing all users as an admin.
+        """
+        self.client.login(username="admin", password="AdminPassword123!")
+        response = self.client.get("/users")
+        assert response.status_code == 200
+        assert isinstance(response.data['results'], list)  # Expecting a list of users
+
+    def test_list_users_as_normal_user(self,  create_normal_user):
+        """
+        Test listing all users as a normal user (permission check).
+        """
+        self.client.login(username="testuser", password="UserPassword123!")
+        response = self.client.get("/users")
+        assert response.status_code == 200
+
+    def test_retrieve_user(self,  create_normal_user):
+        """
+        Test retrieving a single user.
+        """
+        self.client.login(username="testuser", password="UserPassword123!")
+        response = self.client.get(f"/users/{create_normal_user.id}")
+        assert response.status_code == 200
+        assert response.data["username"] == "testuser"
+        assert response.data["email"] == "testuser@example.com"
+
+    # def test_create_user_as_admin(self,  create_superuser):
+    #     """
+    #     Test creating a new user as an admin.
+    #     """
+    #     self.client.login(username="admin", password="AdminPassword123!")
+    #     data = {
+    #         "username": "newuser",
+    #         "email": "newuser@example.com",
+    #         "password": "NewUserPassword123!",
+    #     }
+    #     response = self.client.post("/users", data=data)
+    #     assert response.status_code == 201
+    #     assert response.data["username"] == "newuser"
+    #     assert response.data["email"] == "newuser@example.com"
+
+@pytest.fixture
+def create_test_author(db):
+    """
+    Fixture to create a test author.
+    """
+    return Author.objects.create(name="Test Author")
+
+@pytest.fixture
+def create_test_books(db, create_test_author):
+    """
+    Fixture to create test books.
+    """
+    books = [
+        Book.objects.create(title="Book 1", description="Description 1"),
+        Book.objects.create(title="Book 2", description="Description 2"),
+    ]
+    for book in books:
+        book.authors.add(create_test_author)
+    return books
+
+
+@pytest.mark.django_db
+class TestBookViewSet:
+    def setup_method(self):
+        self.client = APIClient()
+
+    def test_list_books(self, create_test_books ):
+        """
+        Test retrieving the list of books.
+        """
+        response = self.client.get("/books")
+        assert response.status_code == 200
+        assert len(response.data['results']) == len(create_test_books)
+
+
+    def test_retrieve_book(self, create_test_books):
+        """
+        Test retrieving a specific book by ID.
+        """
+        book = create_test_books[0]
+        response = self.client.get(f"/books/{book.id}")
+        assert response.status_code == 200
+        assert response.data["title"] == book.title
+        assert response.data["description"] == book.description
+
+
+    # def test_create_book(self, create_superuser, create_test_author):
+    #     """
+    #     Test creating a new book.
+    #     """
+    #     self.client.login(username="admin", password="AdminPassword123!")
+    #     data = {
+    #         "title": "New Book",
+    #         "description": "New book description",
+    #         "authors": [create_test_author.id],
+    #     }
+    #     response = self.client.post("/books", data=data)
+    #     assert response.status_code == 201
+    #     assert response.data["title"] == "New Book"
