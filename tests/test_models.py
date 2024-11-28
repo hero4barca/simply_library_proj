@@ -81,3 +81,41 @@ class TestFavoriteModel:
         assert favorite.user == user
         assert favorite.book == book
         assert str(favorite) == "testuser - Test Book"
+
+    def test_unique_together_constraint(self):
+        user = User.objects.create_user(username="testuser", password="password123")
+        author = Author.objects.create(name="Test Author")
+        book = Book.objects.create(title="Test Book")
+        book.authors.add(author)
+
+        # Create the first favorite
+        Favorite.objects.create(user=user, book=book)
+
+        # Attempt to create a duplicate favorite
+        with pytest.raises(Exception) as excinfo:
+            Favorite.objects.create(user=user, book=book)
+
+        # Assert the exception is related to unique constraint
+        assert "UNIQUE constraint" in str(excinfo.value)
+
+
+    def test_favorite_relationships(self):
+        # Create a user and multiple books
+        user = User.objects.create_user(username="testuser", password="password123")
+        author = Author.objects.create(name="Test Author")
+
+        book1 = Book.objects.create(title="Book One")
+        book1.authors.add(author)
+
+        book2 = Book.objects.create(title="Book Two")
+        book2.authors.add(author)
+
+        # Add books to favorites
+        Favorite.objects.create(user=user, book=book1)
+        Favorite.objects.create(user=user, book=book2)
+
+        # Assert user's favorites
+        favorites = user.favorites.all()
+        assert len(favorites) == 2
+        assert favorites[0].book == book1
+        assert favorites[1].book == book2
