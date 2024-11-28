@@ -119,3 +119,35 @@ class TestFavoriteModel:
         assert len(favorites) == 2
         assert favorites[0].book == book1
         assert favorites[1].book == book2
+
+    def test_delete_user_cascades_favorites(self):
+        # Create a user, author, and book
+        user = User.objects.create_user(username="testuser", password="password123")
+        author = Author.objects.create(name="Test Author")
+        book = Book.objects.create(title="Test Book")
+        book.authors.add(author)
+
+        # Create a favorite
+        favorite = Favorite.objects.create(user=user, book=book)
+
+        # Delete the user
+        user.delete()
+
+        # Assert the favorite is also deleted
+        assert not Favorite.objects.filter(id=favorite.id).exists()
+
+    def test_delete_book_cascades_favorites(self):
+        # Create a user, author, and book
+        user = User.objects.create_user(username="testuser", password="password123")
+        author = Author.objects.create(name="Test Author")
+        book = Book.objects.create(title="Test Book")
+        book.authors.add(author)
+
+        # Create a favorite
+        favorite = Favorite.objects.create(user=user, book=book)
+
+        # Delete the book
+        book.delete()
+
+        # Assert the favorite is also deleted
+        assert not Favorite.objects.filter(id=favorite.id).exists()
