@@ -394,3 +394,32 @@ class TestAuthorViewSet:
         response = authenticated_client_as_user.post(url, payload)
         assert response.status_code == status.HTTP_201_CREATED
         assert Author.objects.filter(name="New Author").exists()
+
+    def test_update_author_unauthenticated(self, api_client, create_author):
+        author = create_author()
+        url = reverse('author-detail', args=[author.id])
+        payload = {"name": "Updated Name"}
+        response = api_client.patch(url, payload)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_update_author_authenticated(self, authenticated_client_as_user, create_author):
+        author = create_author()
+        url = reverse('author-detail', args=[author.id])
+        payload = {"name": "Updated Name"}
+        response = authenticated_client_as_user.patch(url, payload)
+        assert response.status_code == status.HTTP_200_OK
+        author.refresh_from_db()
+        assert author.name == "Updated Name"
+
+    def test_delete_author_unauthenticated(self, api_client, create_author):
+        author = create_author()
+        url = reverse('author-detail', args=[author.id])
+        response = api_client.delete(url)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_delete_author_authenticated(self, authenticated_client_as_user, create_author):
+        author = create_author()
+        url = reverse('author-detail', args=[author.id])
+        response = authenticated_client_as_user.delete(url)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Author.objects.filter(id=author.id).exists()
