@@ -258,18 +258,6 @@ class TestUserViewSet:
 
 @pytest.mark.django_db
 class TestBookViewSet:
-    @pytest.fixture
-    def create_test_books(db, create_test_author):
-        """
-        Fixture to create test books.
-        """
-        books = [
-            Book.objects.create(title="Book 1", description="Description 1"),
-            Book.objects.create(title="Book 2", description="Description 2"),
-        ]
-        for book in books:
-            book.authors.add(create_test_author)
-        return books
 
     def test_list_books(self, api_client, create_test_books ):
         """
@@ -432,3 +420,13 @@ class TestFavoriteViewSet:
         """Test that unauthenticated users cannot fetch favorites."""
         response = api_client.get("/favorites")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_favorites_authenticated(self, authenticated_client_as_user, create_normal_user, create_test_books):
+        """Test that authenticated users can fetch their favorites."""
+        book = create_test_books[0]
+        Favorite.objects.create(user=create_normal_user, book=book)
+
+        response = authenticated_client_as_user.get("/favorites")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+        assert response.data[0]["title"] == book.title

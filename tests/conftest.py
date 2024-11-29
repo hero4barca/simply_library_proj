@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
-from library.models import Author
+from library.models import Author, Book
 
 @pytest.fixture
 def create_user(db):
@@ -67,3 +67,16 @@ def create_test_author(db):
     Fixture to create a test author.
     """
     return Author.objects.create(name="Test Author")
+
+@pytest.fixture
+def create_test_books(db, create_test_author):
+    """
+    Fixture to create test books.
+    """
+    books = [
+        Book.objects.create(title="Book 1", description="Description 1"),
+        Book.objects.create(title="Book 2", description="Description 2"),
+    ]
+    for book in books:
+        book.authors.add(create_test_author)
+    return books
