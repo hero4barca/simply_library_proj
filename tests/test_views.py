@@ -423,3 +423,12 @@ class TestAuthorViewSet:
         response = authenticated_client_as_user.delete(url)
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not Author.objects.filter(id=author.id).exists()
+
+
+@pytest.mark.django_db
+class TestFavoriteViewSet:
+
+    def test_get_favorites_unauthenticated(self, api_client):
+        """Test that unauthenticated users cannot fetch favorites."""
+        response = api_client.get("/favorites")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
