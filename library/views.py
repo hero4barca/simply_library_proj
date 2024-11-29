@@ -10,11 +10,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Book, Author, Favorite
 from .serializers import UserSerializer, BookSerializer, AuthorSerializer, UserRegistrationSerializer
-from .permissions import IsAuthenticatedForWriteActions
+from .permissions import IsAuthenticatedForWriteActions, IsAdminOrSelf
 from .authentication import JWTAuthenticationForWriteActions
 from .recommendations import recommend_books
 
@@ -37,6 +37,19 @@ class LoginView(TokenObtainPairView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    http_method_names = ["get"]
+    permission_classes = [IsAdminOrSelf]
+
+    def get_queryset(self):
+        """
+        Restrict queryset to:
+        - All users if the request is from an admin (list endpoint).
+        - None otherwise (to prevent non-admins from seeing other users).
+        """
+        if self.action == "list" and not self.request.user.is_staff:
+            raise PermissionDenied("You do not have permission to view the user list.")
+        return super().get_queryset()
+
 
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
