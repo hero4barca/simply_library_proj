@@ -108,7 +108,7 @@ class FavoriteViewSet(viewsets.ViewSet):
             return Response({
                 'message': 'Book added to favorites',
                 'recommendations': recommendations
-            })
+            }, status=status.HTTP_201_CREATED)
         return Response({'message': 'Book already in favorites'}, status=status.HTTP_200_OK)
 
     def destroy(self, request, pk=None):

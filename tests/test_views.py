@@ -415,11 +415,18 @@ class TestAuthorViewSet:
 
 @pytest.mark.django_db
 class TestFavoriteViewSet:
+    @pytest.fixture
+    def create_book(db):
+        """Fixture to create a book."""
+        def make_book(title, description="Default Description"):
+            return Book.objects.create(title=title, description=description)
+        return make_book
 
     def test_get_favorites_unauthenticated(self, api_client):
         """Test that unauthenticated users cannot fetch favorites."""
         response = api_client.get("/favorites")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
 
     def test_get_favorites_authenticated(self, authenticated_client_as_user, create_normal_user, create_test_books):
         """Test that authenticated users can fetch their favorites."""
@@ -430,3 +437,45 @@ class TestFavoriteViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
         assert response.data[0]["title"] == book.title
+
+
+    def test_add_favorite_valid_book(self, authenticated_client_as_user, create_normal_user, create_test_books):
+        """Test adding a valid book to favorites."""
+        book = create_test_books[0]
+
+        response = authenticated_client_as_user.post("/favorites", {"book_id": book.id})
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Favorite.objects.filter(user=create_normal_user, book=book).exists()
+        assert "recommendations" in response.data
+
+
+    def test_add_favorite_invalid_book(self, authenticated_client_as_user, create_normal_user):
+        """Test adding a non-existent book to favorites."""
+
+        response = authenticated_client_as_user.post("/favorites", {"book_id": 999})
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data["error"] == "Book not found"
+
+
+    def test_add_favorite_exceeds_limit(self, authenticated_client_as_user, create_normal_user, create_book):
+        """Test exceeding the limit of 20 favorite books."""
+        user = create_normal_user
+        for i in range(20):
+            book = create_book(title=f"Book {i}")
+            Favorite.objects.create(user=create_normal_user, book=book)
+
+        new_book = create_book(title="Exceed Limit Book")
+        response = authenticated_client_as_user.post("/favorites", {"book_id": new_book.id})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data["error"] == "Cannot add more than 20 favorites"
+
+
+    def test_add_favorite_duplicate(self, authenticated_client_as_user, create_normal_user, create_book):
+        """Test adding a duplicate book to favorites."""
+
+        book = create_book(title="Duplicate Book")
+        Favorite.objects.create(user=create_normal_user, book=book)
+
+        response = authenticated_client_as_user.post("/favorites", {"book_id": book.id})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["message"] == "Book already in favorites"
