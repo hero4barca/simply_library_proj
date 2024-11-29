@@ -1,6 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
+from library.models import Author
 
 @pytest.fixture
 def create_user(db):
@@ -59,3 +60,10 @@ def authenticated_client_as_user(api_client, create_normal_user):
     token = response.data['access']
     api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
     return api_client
+
+@pytest.fixture
+def create_test_author(db):
+    """
+    Fixture to create a test author.
+    """
+    return Author.objects.create(name="Test Author")

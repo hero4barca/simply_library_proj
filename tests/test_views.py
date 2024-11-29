@@ -2,7 +2,9 @@ import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
+from django.urls import reverse
 from library.models import Book, Author, Favorite
+
 
 @pytest.mark.django_db
 class TestRegisterView():
@@ -204,7 +206,6 @@ class TestUserViewSet:
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data["detail"] == "You do not have permission to perform this action."
 
-
     def test_retrieve_own_user_details(self, authenticated_client_as_user, create_normal_user):
         """
         Test that a user can retrieve their own details.
@@ -254,29 +255,21 @@ class TestUserViewSet:
         response = authenticated_client_as_user.patch(f"/users/{create_normal_user.id}", data=data)
         assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
-@pytest.fixture
-def create_test_author(db):
-    """
-    Fixture to create a test author.
-    """
-    return Author.objects.create(name="Test Author")
-
-@pytest.fixture
-def create_test_books(db, create_test_author):
-    """
-    Fixture to create test books.
-    """
-    books = [
-        Book.objects.create(title="Book 1", description="Description 1"),
-        Book.objects.create(title="Book 2", description="Description 2"),
-    ]
-    for book in books:
-        book.authors.add(create_test_author)
-    return books
-
 
 @pytest.mark.django_db
 class TestBookViewSet:
+    @pytest.fixture
+    def create_test_books(db, create_test_author):
+        """
+        Fixture to create test books.
+        """
+        books = [
+            Book.objects.create(title="Book 1", description="Description 1"),
+            Book.objects.create(title="Book 2", description="Description 2"),
+        ]
+        for book in books:
+            book.authors.add(create_test_author)
+        return books
 
     def test_list_books(self, api_client, create_test_books ):
         """
@@ -364,3 +357,40 @@ class TestBookViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data['results']) > 0
         assert create_test_author.name in response.data['results'][0]["authors"][0]["name"]
+
+
+@pytest.mark.django_db
+class TestAuthorViewSet:
+
+    @pytest.fixture
+    def create_author(self):
+        def make_author(name="John Doe"):
+            return Author.objects.create(name=name)
+        return make_author
+
+    def test_list_authors(self, api_client):
+        """
+        Test the list endpoint for Authors
+        """
+        url = reverse('author-list')
+        response = api_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_retrieve_single_author(self, api_client, create_author):
+        author = create_author()
+        url = reverse('author-detail', args=[author.id])
+        response = api_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_create_author_unauthenticated(self, api_client):
+        url = reverse('author-list')
+        payload = {"name": "New Author"}
+        response = api_client.post(url, payload)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_create_author_authenticated(self, authenticated_client_as_user):
+        url = reverse('author-list')
+        payload = {"name": "New Author"}
+        response = authenticated_client_as_user.post(url, payload)
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Author.objects.filter(name="New Author").exists()
