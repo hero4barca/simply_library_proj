@@ -479,3 +479,22 @@ class TestFavoriteViewSet:
         response = authenticated_client_as_user.post("/favorites", {"book_id": book.id})
         assert response.status_code == status.HTTP_200_OK
         assert response.data["message"] == "Book already in favorites"
+
+
+    def test_remove_favorite_valid(self, authenticated_client_as_user, create_normal_user, create_book):
+        """Test removing a valid favorite book."""
+        book = create_book(title="Remove Book")
+        favorite = Favorite.objects.create(user=create_normal_user, book=book)
+
+        response = authenticated_client_as_user.delete(f"/favorites/{book.id}")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["message"] == "Book removed from favorites"
+        assert not Favorite.objects.filter(id=favorite.id).exists()
+
+
+    def test_remove_favorite_invalid(self, authenticated_client_as_user):
+        """Test removing a non-existent favorite book."""
+
+        response = authenticated_client_as_user.delete("/favorites/999")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data["error"] == "Favorite book not found"
