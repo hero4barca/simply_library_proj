@@ -332,39 +332,90 @@ def create_test_books(db, create_test_author):
 
 @pytest.mark.django_db
 class TestBookViewSet:
-    def setup_method(self):
-        self.client = APIClient()
 
-    def test_list_books(self, create_test_books ):
+    def test_list_books(self, api_client, create_test_books ):
         """
         Test retrieving the list of books.
         """
-        response = self.client.get("/books")
+        response = api_client.get("/books")
         assert response.status_code == 200
         assert len(response.data['results']) == len(create_test_books)
 
 
-    def test_retrieve_book(self, create_test_books):
+    def test_retrieve_book(self, api_client, create_test_books):
         """
         Test retrieving a specific book by ID.
         """
         book = create_test_books[0]
-        response = self.client.get(f"/books/{book.id}")
+        response = api_client.get(f"/books/{book.id}")
         assert response.status_code == 200
         assert response.data["title"] == book.title
         assert response.data["description"] == book.description
 
 
-    # def test_create_book(self, create_superuser, create_test_author):
-    #     """
-    #     Test creating a new book.
-    #     """
-    #     self.client.login(username="admin", password="AdminPassword123!")
-    #     data = {
-    #         "title": "New Book",
-    #         "description": "New book description",
-    #         "authors": [create_test_author.id],
-    #     }
-    #     response = self.client.post("/books", data=data)
-    #     assert response.status_code == 201
-    #     assert response.data["title"] == "New Book"
+    def test_create_book(self, authenticated_client_as_admin, create_test_author):
+        """
+        Test creating a new book.
+        """
+        data = {
+            "title": "New Book",
+            "description": "New book description",
+            "authors": [create_test_author.id],
+        }
+        response = authenticated_client_as_admin.post("/books", data=data)
+        assert response.status_code == 201
+        assert response.data["title"] == "New Book"
+
+    def test_create_book_unauthenticated(self, api_client, create_test_author):
+        """
+        Test creating a book without authentication.
+        """
+        data = {
+            "title": "Unauthorized Book",
+            "description": "This book should not be created",
+            "authors": [create_test_author.id],
+        }
+        response = api_client.post("/books", data=data)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_update_book(self, authenticated_client_as_admin, create_test_books):
+        """
+        Test updating an existing book as an authenticated admin user.
+        """
+        book = create_test_books[0]
+        data = {
+            "title": "Updated Book Title",
+        }
+        response = authenticated_client_as_admin.patch(f"/books/{book.id}", data=data)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["title"] == "Updated Book Title"
+
+    def test_delete_book(self, authenticated_client_as_admin, create_test_books):
+        """
+        Test deleting a book as an authenticated admin user.
+        """
+        book = create_test_books[0]
+        response = authenticated_client_as_admin.delete(f"/books/{book.id}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Book.objects.filter(id=book.id).exists()
+
+    def test_search_books_by_title(self, api_client, create_test_books):
+        """
+        Test searching books by title.
+        """
+        response = api_client.get("/books?search=Book 1")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['count'] == 1
+        assert len(response.data['results']) == 1
+        results_list = response.data['results']
+        assert results_list[0].get("description") == "Description 1"
+        assert results_list[0].get("title") == "Book 1"
+
+    def test_search_books_by_author_name(self, api_client, create_test_books, create_test_author):
+        """
+        Test searching books by author name.
+        """
+        response = api_client.get(f"/books?search={create_test_author.name}")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data['results']) > 0
+        assert create_test_author.name in response.data['results'][0]["authors"][0]["name"]
